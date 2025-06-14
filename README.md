@@ -1,0 +1,254 @@
+# OpenVPN Flutter Client
+
+A cross-platform OpenVPN client built with Flutter with **native OpenVPN3 integration**.
+
+## ✅ Current Status
+
+**FULLY FUNCTIONAL** - The Android implementation is complete and working with real OpenVPN3 integration!
+
+### Working Features
+- ✅ **Native OpenVPN3 Integration**: Real OpenVPN connections using OpenVPN3 Core library
+- ✅ **Android Support**: Fully functional with NDK 27.0.12077973
+- ✅ **Real-time Status Updates**: Live connection status and statistics
+- ✅ **Configuration Import**: Support for .ovpn configuration files
+- ✅ **VPN Interface Management**: Proper Android VPN service implementation
+- ✅ **Foreground Service**: Compliant with Android 14+ requirements
+- ✅ **Threading Safety**: Proper main thread handling for UI updates
+- ✅ **Connection Lifecycle**: Connect, authenticate, disconnect flow
+
+### Platform Status
+- 🟢 **Android**: Fully implemented and tested with real OpenVPN3
+- 🟡 **iOS**: Planned (requires Apple Developer signing)
+- 🟡 **Windows**: Planned
+- 🟡 **macOS**: Planned
+- 🟡 **Linux**: Planned
+
+## Features
+
+- 🔐 **Real OpenVPN3 Integration**: Uses native OpenVPN3 Core library for actual VPN connections
+- 📱 **Android Support**: Fully functional Android implementation
+- 📄 **Configuration Import**: Import .ovpn configuration files
+- ⚙️ **Manual Configuration**: Create configurations manually with an intuitive UI
+- 🔒 **Secure Storage**: Credentials stored securely using platform-specific secure storage
+- 📊 **Real-time Monitoring**: Live connection status, data usage, and connection time
+- 🎨 **Modern UI**: Clean, Material Design interface with dark/light theme support
+- 🔄 **Connection Management**: Complete connect/authenticate/disconnect lifecycle
+- 📋 **Multiple Configs**: Manage multiple VPN configurations
+
+## Screenshots
+
+The app features a modern, intuitive interface with:
+- Connection status dashboard with animated indicators
+- Server configuration management
+- Real-time connection statistics
+- Authentication dialogs for secure login
+
+## Getting Started
+
+### Prerequisites
+
+- Flutter SDK (3.32.4+)
+- Dart SDK
+- **Android Development** (✅ Working):
+  - Android Studio
+  - Android NDK 27.0.12077973 (required)
+  - Android SDK API 35+
+  - CMake for native library compilation
+- **Other Platforms** (Planned):
+  - **iOS**: Xcode (macOS only)
+  - **macOS**: Xcode
+  - **Windows**: Visual Studio with C++ support
+  - **Linux**: Linux development tools
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd fl_openvpn_client
+```
+
+2. Install dependencies:
+```bash
+flutter pub get
+```
+
+3. **Android Setup** (✅ Required for working implementation):
+```bash
+# Install NDK 27.0.12077973 via Android Studio SDK Manager or:
+sdkmanager --install "ndk;27.0.12077973"
+```
+
+4. Run the app:
+```bash
+# Android (✅ Fully Working)
+flutter run -d android
+
+# Other platforms (planned)
+flutter run -d macos
+flutter run -d ios
+flutter run -d windows
+flutter run -d linux
+```
+
+## Usage
+
+### Adding VPN Configurations
+
+1. **Import .ovpn file**: Tap the "+" button and select "Import .ovpn file" to import an existing OpenVPN configuration
+2. **Manual configuration**: Create a configuration manually by entering server details
+3. **Sample configurations**: Load demo configurations for testing
+
+### Connecting to VPN
+
+1. Select a configuration from the server list
+2. Tap the "Connect" button
+3. Enter credentials if required
+4. Monitor connection status and statistics
+
+### Managing Configurations
+
+- Tap on any configuration to set it as active
+- Use the menu (⋮) to edit or delete configurations
+- View connection history and statistics
+
+## Architecture
+
+The app follows a clean architecture pattern with:
+
+- **Models**: Data structures for VPN configurations and status
+- **Services**: VPN service abstraction and OpenVPN implementation
+- **Providers**: State management using Provider pattern
+- **Widgets**: Reusable UI components
+- **Screens**: Main application screens
+- **Utils**: Helper utilities for configuration parsing and storage
+
+### Key Components
+
+- `VpnProvider`: Main state management for VPN operations
+- `OpenVpnService`: Platform-specific VPN service implementation
+- `ConfigParser`: OpenVPN configuration file parser
+- `StorageHelper`: Secure storage with fallback to file storage
+
+## Platform-Specific Implementation
+
+### Android ✅ (Fully Implemented)
+
+**Real OpenVPN3 integration with native library compilation:**
+
+**Key Components:**
+- **Native Library**: `libopenvpn_native.so` compiled with CMake
+- **OpenVPN3 Core**: Full OpenVPN3 Core library integration
+- **NDK Version**: 27.0.12077973 (aligned across all dependencies)
+- **Service Type**: `specialUse` foreground service for VPN functionality
+- **Threading**: Proper main thread handling for Flutter integration
+- **Permissions**: All required VPN and foreground service permissions
+
+**Build Configuration:**
+- CMakeLists.txt compiles OpenVPN3 Core with ASIO and OpenSSL
+- JNI bindings for Flutter ↔ Native communication
+- Kotlin service layer for Android VPN management
+
+**Testing Status:**
+- ✅ Tested with real OpenVPN server (Ubuntu 24.04)
+- ✅ Complete connection lifecycle working
+- ✅ Real-time status updates functional
+- ✅ Proper authentication handling
+- ✅ Clean disconnect process
+
+### iOS (Planned)
+- Implement using NetworkExtension framework
+- Configure VPN entitlements
+- Handle iOS-specific VPN permissions
+
+### macOS (Planned)
+- Use NetworkExtension framework
+- Configure system extension entitlements
+- Handle macOS VPN permissions
+
+### Windows (Planned)
+- Implement using Windows VPN APIs
+- Handle Windows-specific networking
+
+### Linux (Planned)
+- Integrate with system OpenVPN client
+- Handle Linux networking permissions
+
+## Testing
+
+### Manual Testing ✅ (Android)
+- **Connection Flow**: Tested complete connect/disconnect cycle
+- **Status Updates**: Verified real-time status reporting
+- **Error Handling**: Tested various error conditions
+- **Service Management**: Verified foreground service behavior
+
+### Test Environment
+- **Server**: Ubuntu 24.04 OpenVPN server (multipass)
+- **Client**: Android emulator with API 35
+- **Configuration**: Real .ovpn files with authentication
+
+### Automated Testing (Planned)
+```bash
+flutter test
+```
+
+The project will include:
+- Unit tests for models and utilities
+- Widget tests for UI components
+- Integration tests for VPN functionality
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
+
+## Security Considerations
+
+- Credentials are stored using platform-specific secure storage
+- Configuration files are validated before import
+- Network traffic is encrypted using OpenVPN protocols
+- No sensitive data is logged in production builds
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Flutter team for the excellent cross-platform framework
+- OpenVPN community for the robust VPN protocol
+- Contributors and testers who helped improve the app
+
+## Support
+
+For issues, feature requests, or questions:
+1. Check existing issues in the repository
+2. Create a new issue with detailed information
+3. Include platform, Flutter version, and error logs
+
+## Troubleshooting
+
+### Common Issues
+
+1. **NDK Version Mismatch**:
+   - Ensure NDK 27.0.12077973 is installed
+   - Remove conflicting NDK versions
+   - Clean and rebuild: `flutter clean && flutter run`
+
+2. **Native Library Not Found**:
+   - Verify CMakeLists.txt configuration
+   - Check NDK path in local.properties
+   - Ensure native library compilation is enabled
+
+3. **Foreground Service Errors**:
+   - Verify `specialUse` service type configuration
+   - Check Android 14+ permission requirements
+   - Ensure proper service property declaration
+
+---
+
+**Note**: The Android implementation is fully functional with real OpenVPN3 integration. Other platforms are planned for future development.
