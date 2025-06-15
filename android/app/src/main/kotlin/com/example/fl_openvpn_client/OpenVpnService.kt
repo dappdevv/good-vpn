@@ -57,6 +57,9 @@ class OpenVpnService : VpnService() {
 
     // Main thread handler for UI updates
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    // Statistics update timer
+    private var statsUpdateRunnable: Runnable? = null
     
     inner class LocalBinder : Binder() {
         fun getService(): OpenVpnService = this@OpenVpnService
@@ -145,7 +148,68 @@ class OpenVpnService : VpnService() {
                 } else {
                     startForeground(NOTIFICATION_ID, createNotification("Connected", message))
                 }
+
+                // Start periodic statistics updates when connected
+                startStatsUpdates()
+            } else {
+                // Stop statistics updates when disconnected
+                stopStatsUpdates()
             }
+        }
+    }
+
+    private fun startStatsUpdates() {
+        stopStatsUpdates() // Stop any existing updates
+
+        statsUpdateRunnable = object : Runnable {
+            override fun run() {
+                if (isConnected.get()) {
+                    // Get current statistics and update status
+                    val stats = getConnectionStats()
+                    if (stats != null) {
+                        val bytesInValue = (stats["bytesIn"] as? Number)?.toLong() ?: 0L
+                        val bytesOutValue = (stats["bytesOut"] as? Number)?.toLong() ?: 0L
+                        val durationValue = (stats["duration"] as? Number)?.toLong() ?: 0L
+
+                        val vpnStatus = VpnStatus(
+                            state = "connected",
+                            message = "Data: ${formatBytes(bytesInValue)} in, ${formatBytes(bytesOutValue)} out",
+                            serverIp = stats["serverIp"] as? String,
+                            localIp = stats["localIp"] as? String,
+                            bytesIn = bytesInValue,
+                            bytesOut = bytesOutValue,
+                            duration = durationValue,
+                            connectedAt = connectedAt
+                        )
+
+                        statusListener?.invoke(vpnStatus)
+
+                        Log.d(TAG, "Statistics update - In: ${formatBytes(bytesInValue)}, Out: ${formatBytes(bytesOutValue)}, Duration: ${durationValue}s")
+                    }
+
+                    // Schedule next update in 3 seconds
+                    mainHandler.postDelayed(this, 3000)
+                }
+            }
+        }
+
+        // Start first update after 1 second
+        mainHandler.postDelayed(statsUpdateRunnable!!, 1000)
+    }
+
+    private fun stopStatsUpdates() {
+        statsUpdateRunnable?.let { runnable ->
+            mainHandler.removeCallbacks(runnable)
+        }
+        statsUpdateRunnable = null
+    }
+
+    private fun formatBytes(bytes: Long): String {
+        return when {
+            bytes >= 1024 * 1024 * 1024 -> String.format("%.1f GB", bytes / (1024.0 * 1024.0 * 1024.0))
+            bytes >= 1024 * 1024 -> String.format("%.1f MB", bytes / (1024.0 * 1024.0))
+            bytes >= 1024 -> String.format("%.1f KB", bytes / 1024.0)
+            else -> "$bytes B"
         }
     }
     
@@ -408,6 +472,9 @@ class OpenVpnService : VpnService() {
     }
     
     override fun onDestroy() {
+        // Stop statistics updates
+        stopStatsUpdates()
+
         disconnect()
 
         // Cleanup native library
