@@ -1,95 +1,65 @@
 cmake_minimum_required(VERSION 3.18.1)
 
+# Declare the project
 project("openvpn_native")
 
 # Set C++ standard
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find required packages
-find_library(log-lib log)
-find_library(android-lib android)
+# Set OpenVPN root directory
+set(OPENVPN_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../openvpn")
 
-# OpenVPN3 Core directory
-set(OPENVPN3_DIR ${CMAKE_CURRENT_SOURCE_DIR}/openvpn3-core)
+# Set architecture-specific paths
+if(ANDROID_ABI STREQUAL "arm64-v8a")
+    set(ANDROID_ARCH "arm64")
+elseif(ANDROID_ABI STREQUAL "armeabi-v7a")
+    set(ANDROID_ARCH "arm")
+elseif(ANDROID_ABI STREQUAL "x86")
+    set(ANDROID_ARCH "x86")
+elseif(ANDROID_ABI STREQUAL "x86_64")
+    set(ANDROID_ARCH "x86_64")
+else()
+    message(FATAL_ERROR "Unsupported Android ABI: ${ANDROID_ABI}")
+endif()
+
+# Set install directory
+set(INSTALL_DIR "${OPENVPN_ROOT_DIR}/build/android/${ANDROID_ARCH}/install")
 
 # Include directories
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${OPENVPN3_DIR}
-    ${OPENVPN3_DIR}/openvpn
-    ${OPENVPN3_DIR}/client
-    ${CMAKE_CURRENT_SOURCE_DIR}/asio/asio/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/openssl/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/openssl
+    ${INSTALL_DIR}/include
+    ${OPENVPN_ROOT_DIR}/build/deps/openvpn3-core
+    ${OPENVPN_ROOT_DIR}/build/deps/asio/asio/include
+    ${OPENVPN_ROOT_DIR}/build/deps/fmt/include
+    ${OPENVPN_ROOT_DIR}/build/deps/lz4/lib
 )
 
-# OpenVPN3 Core source files (key files for client functionality)
-set(OPENVPN3_CORE_SOURCES
-    ${OPENVPN3_DIR}/openvpn/buffer/buffer.hpp
-    ${OPENVPN3_DIR}/openvpn/common/rc.hpp
-    ${OPENVPN3_DIR}/openvpn/common/exception.hpp
-    ${OPENVPN3_DIR}/openvpn/common/options.hpp
-    ${OPENVPN3_DIR}/openvpn/common/string.hpp
-    ${OPENVPN3_DIR}/openvpn/common/unicode.hpp
-    ${OPENVPN3_DIR}/openvpn/log/logsimple.hpp
-    ${OPENVPN3_DIR}/openvpn/time/time.hpp
-    ${OPENVPN3_DIR}/openvpn/random/randapi.hpp
-    ${OPENVPN3_DIR}/openvpn/crypto/cryptoapi.hpp
-    ${OPENVPN3_DIR}/openvpn/ssl/sslapi.hpp
-    ${OPENVPN3_DIR}/openvpn/transport/client/transbase.hpp
-    ${OPENVPN3_DIR}/openvpn/client/cliconnect.hpp
-    ${OPENVPN3_DIR}/openvpn/client/clilife.hpp
-    ${OPENVPN3_DIR}/openvpn/client/cliproto.hpp
-)
+# Link directories
+link_directories(${INSTALL_DIR}/lib)
 
-# Our implementation source files
-set(OPENVPN3_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/openvpn_jni.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/openvpn_client.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/openvpn3_wrapper.cpp
-)
+# Find required libraries
+find_library(log-lib log)
+find_library(android-lib android)
 
-# Preprocessor definitions
-add_definitions(
-    -DASIO_STANDALONE
-    -DUSE_OPENSSL
-    -DHAVE_LZ4
-    -DOPENVPN_PLATFORM_ANDROID
-    -DOPENVPN_PLATFORM_VERSION="Android"
-    -DOPENVPN_SHOW_SESSION_TOKEN
-    -DOPENVPN_DEBUG
-    -DUSE_ASIO
-    -DUSE_MBEDTLS
-    -DOPENVPN_USE_TUN_BUILDER
-    -DOPENVPN_GREMLIN
-    -DOPENVPN_ENABLE_ASSERT
-)
-
-# Create shared library
+# Create Android JNI wrapper
 add_library(
     openvpn_native
     SHARED
-    ${OPENVPN3_SOURCES}
+    ${OPENVPN_ROOT_DIR}/openvpn_jni.cpp
+    android_compat.cpp
 )
 
 # Link libraries
-target_link_libraries(
-    openvpn_native
+target_link_libraries(openvpn_native
+    openvpn3-core
+    ssl
+    crypto
+    fmt
+    lz4
     ${log-lib}
     ${android-lib}
-    z
-)
-
-# Compiler flags
-target_compile_options(openvpn_native PRIVATE
-    -Wall
-    -Wextra
-    -Wno-unused-parameter
-    -Wno-unused-variable
-    -Wno-deprecated-declarations
-    -O2
-    -fPIC
-    -frtti
-    -fexceptions
+    -latomic
+    -lm
+    -ldl
 )
