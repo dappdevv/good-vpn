@@ -37,8 +37,20 @@ android {
         versionName = flutter.versionName
 
         // Configure NDK ABI filters for OpenVPN native library
+        // Only build for x86_64 (Android emulator) since OpenSSL is built for this architecture
         ndk {
-            abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86"))
+            abiFilters.addAll(listOf("x86_64"))
+        }
+
+        // Configure CMake arguments for OpenVPN native library
+        externalNativeBuild {
+            cmake {
+                arguments.addAll(listOf(
+                    "-DANDROID_STL=c++_shared",
+                    "-DANDROID_CPP_FEATURES=rtti exceptions"
+                ))
+                cppFlags.addAll(listOf("-frtti", "-fexceptions"))
+            }
         }
     }
 

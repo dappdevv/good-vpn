@@ -43,3 +43,88 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Native build artifacts and object files
+*.o
+*.d
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+*.lib
+*.exp
+*.pdb
+*.ilk
+
+# CMake build artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# Android NDK build artifacts
+/android/app/src/main/cpp/build/
+/android/app/src/main/cpp/.cxx/
+/android/app/src/main/cpp/.externalNativeBuild/
+/android/app/.cxx/
+/android/app/.externalNativeBuild/
+/android/app/build/
+/android/build/
+
+# Gradle build artifacts
+.gradle/
+/android/gradle/
+/android/gradlew
+/android/gradlew.bat
+/android/local.properties
+
+# OpenVPN3 Core build artifacts (if building from source)
+/android/app/src/main/cpp/openvpn3-core/build/
+/android/app/src/main/cpp/openssl/build/
+/android/app/src/main/cpp/asio/build/
+
+# New OpenVPN library build directory
+/openvpn/build/
+
+# Platform-specific build directories
+/windows/build/
+/linux/build/
+/macos/build/
+/ios/build/
+
+# Xcode build artifacts (iOS/macOS)
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
+build/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Visual Studio build artifacts (Windows)
+*.vcxproj.user
+*.vcxproj.filters
+*.sln.docstates
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+# Linux build artifacts
+*.out
+*.app

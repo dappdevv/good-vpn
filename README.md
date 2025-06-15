@@ -12,11 +12,13 @@ A cross-platform OpenVPN client built with Flutter with **native OpenVPN3 integr
 - ✅ **Native OpenVPN3 Integration**: Real OpenVPN connections using OpenVPN3 Core library
 - ✅ **Android Support**: Fully functional with NDK 27.0.12077973
 - ✅ **Real-time Status Updates**: Live connection status and statistics
+- ✅ **VPN IP Display**: Persistent VPN IP address display throughout connection
 - ✅ **Configuration Import**: Support for .ovpn configuration files
 - ✅ **VPN Interface Management**: Proper Android VPN service implementation
 - ✅ **Foreground Service**: Compliant with Android 14+ requirements
 - ✅ **Threading Safety**: Proper main thread handling for UI updates
 - ✅ **Connection Lifecycle**: Connect, authenticate, disconnect flow
+- ✅ **Multiple Connect/Disconnect Cycles**: Reliable reconnection support
 
 ### Platform Status
 - 🟢 **Android**: Fully implemented and tested with real OpenVPN3
@@ -25,6 +27,54 @@ A cross-platform OpenVPN client built with Flutter with **native OpenVPN3 integr
 - 🟡 **macOS**: Planned
 - 🟡 **Linux**: Planned
 
+## Project Structure
+
+The project has been restructured for better cross-platform support:
+
+```
+fl_openvpn_client/
+├── lib/                          # Flutter/Dart source code
+│   ├── models/                   # Data models
+│   ├── providers/                # State management (Provider pattern)
+│   ├── screens/                  # UI screens
+│   ├── services/                 # Business logic and native integration
+│   └── widgets/                  # Reusable UI components
+├── android/                      # Android-specific code
+│   └── app/
+│       └── src/main/
+│           ├── cpp/              # Minimal Android JNI wrapper
+│           │   ├── CMakeLists.txt    # Links to openvpn/ directory
+│           │   └── android_compat.cpp # Android compatibility layer
+│           └── kotlin/           # Android Kotlin code
+├── openvpn/                      # 🆕 Cross-platform OpenVPN library
+│   ├── build_android.sh         # Android build script
+│   ├── openvpn_jni.cpp          # Main JNI implementation
+│   ├── build/                    # Build artifacts (ignored by git)
+│   │   ├── deps/                 # External dependencies
+│   │   │   ├── asio/             # ASIO networking library (v1.30.2)
+│   │   │   ├── fmt/              # Formatting library (v11.0.2)
+│   │   │   ├── lz4/              # Compression library (v1.10.0)
+│   │   │   ├── openssl/          # OpenSSL cryptography (v3.3.2)
+│   │   │   └── openvpn3-core/    # OpenVPN3 Core library (v3.11.1)
+│   │   └── android/              # Android build outputs
+│   │       └── {arch}/           # Architecture-specific builds
+│   │           ├── install/      # Compiled libraries
+│   │           └── lib/          # Final .so files
+├── ios/                          # iOS-specific code (future)
+├── assets/                       # Static assets (images, fonts, etc.)
+├── sample_configs/               # Sample OpenVPN configuration files
+├── udp_forwarder.py             # UDP forwarding utility for emulator testing
+└── build_project.sh             # 🆕 Main project build script
+```
+
+### Key Improvements
+- **🔄 Reusable OpenVPN Library**: The `openvpn/` directory contains a standalone library that can be used across all platforms
+- **🤖 Automated Dependency Management**: Build scripts automatically clone and build all dependencies with pinned stable versions
+- **🏗️ Clean Build System**: Dependencies are built outside the source tree in `openvpn/build/` (ignored by git)
+- **📦 CMake Integration**: Minimal Android JNI wrapper links to the main OpenVPN library
+- **🔒 Stable Dependencies**: All dependencies pinned to specific stable versions for reproducible builds
+- **🧹 Clean Source Tree**: Old embedded dependencies removed, only essential source files tracked by git
+
 ## Features
 
 - 🔐 **Real OpenVPN3 Integration**: Uses native OpenVPN3 Core library for actual VPN connections
@@ -32,7 +82,7 @@ A cross-platform OpenVPN client built with Flutter with **native OpenVPN3 integr
 - 📄 **Configuration Import**: Import .ovpn configuration files
 - ⚙️ **Manual Configuration**: Create configurations manually with an intuitive UI
 - 🔒 **Secure Storage**: Credentials stored securely using platform-specific secure storage
-- 📊 **Real-time Monitoring**: Live connection status, data usage, and connection time
+- 📊 **Real-time Monitoring**: Live connection status, VPN IP address, data usage, and connection time
 - 🎨 **Modern UI**: Clean, Material Design interface with dark/light theme support
 - 🔄 **Connection Management**: Complete connect/authenticate/disconnect lifecycle
 - 📋 **Multiple Configs**: Manage multiple VPN configurations
@@ -70,16 +120,39 @@ git clone <repository-url>
 cd fl_openvpn_client
 ```
 
-2. Install dependencies:
+2. Install Flutter dependencies:
 ```bash
 flutter pub get
 ```
 
-3. **Android Setup** (✅ Required for working implementation):
-```bash
-# Install NDK 27.0.12077973 via Android Studio SDK Manager or:
-sdkmanager --install "ndk;27.0.12077973"
-```
+3. **Build OpenVPN Dependencies**:
+
+   **For Android** (✅ Required for working implementation):
+   ```bash
+   # Set up Android NDK
+   export ANDROID_NDK_ROOT=/path/to/your/ndk/27.0.12077973
+   export ANDROID_ABI=arm64-v8a  # or armeabi-v7a, x86_64, x86
+
+   # Build dependencies and app
+   ./build_project.sh android
+   ```
+
+   **For Desktop platforms** (Planned):
+   ```bash
+   # Build dependencies and app
+   ./build_project.sh desktop
+   ```
+
+   **Manual dependency build** (if needed):
+   ```bash
+   # Android dependencies only
+   cd openvpn
+   ./build_android.sh
+
+   # Desktop dependencies only
+   cd openvpn
+   ./build_dependencies.sh
+   ```
 
 4. Run the app:
 ```bash
@@ -155,6 +228,8 @@ The app follows a clean architecture pattern with:
 - ✅ Tested with real OpenVPN server (Ubuntu 24.04)
 - ✅ Complete connection lifecycle working
 - ✅ Real-time status updates functional
+- ✅ VPN IP address display working persistently
+- ✅ Multiple connect/disconnect cycles tested
 - ✅ Proper authentication handling
 - ✅ Clean disconnect process
 
@@ -225,12 +300,22 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - OpenVPN community for the robust VPN protocol
 - Contributors and testers who helped improve the app
 
+## Documentation
+
+### Technical Documentation
+- **[Technical Summary](TECHNICAL_SUMMARY.md)**: Complete technical implementation details
+- **[Current Status](CurrentStatus.md)**: Latest project status and achievements
+- **[VPN IP Display Fix](VPN_IP_DISPLAY_FIX.md)**: Detailed fix for VPN IP persistence issue
+- **[Build Guide](BUILD_GUIDE.md)**: Step-by-step build instructions
+- **[VPN Development Guide](VPN_DEVELOPMENT_GUIDE.md)**: VPN development best practices
+
 ## Support
 
 For issues, feature requests, or questions:
 1. Check existing issues in the repository
 2. Create a new issue with detailed information
 3. Include platform, Flutter version, and error logs
+4. Refer to the technical documentation for implementation details
 
 ## Troubleshooting
 
@@ -250,6 +335,12 @@ For issues, feature requests, or questions:
    - Verify `specialUse` service type configuration
    - Check Android 14+ permission requirements
    - Ensure proper service property declaration
+
+4. **VPN IP Not Displaying**:
+   - Ensure connection is fully established (status shows "connected")
+   - Check that stats polling is working (look for periodic stats logs)
+   - Verify JNI method includes `localIp` field in returned HashMap
+   - Check Flutter type casting in `getConnectionStats()` method
 
 ---
 
