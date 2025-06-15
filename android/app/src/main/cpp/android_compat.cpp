@@ -4,6 +4,8 @@
 #include <android/log.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <cstdarg>
+#include <cstdio>
 
 // Android logging wrapper
 void android_log_print(int priority, const char* tag, const char* format, ...) {
@@ -13,10 +15,13 @@ void android_log_print(int priority, const char* tag, const char* format, ...) {
     va_end(args);
 }
 
-// Stub implementations for missing functions that may be needed
+// Ensure stdio symbols are available for fmt library
+// These should be provided by NDK, but we'll make sure they're linked
 extern "C" {
-    // These are provided by the Android NDK, but we include stubs just in case
-    int getpid() { return ::getpid(); }
-    int getuid() { return ::getuid(); }
-    int geteuid() { return ::geteuid(); }
+    // Reference the NDK stdio symbols to ensure they're linked
+    void ensure_stdio_symbols() {
+        // This function ensures stderr and stdout are linked from NDK
+        (void)stderr;
+        (void)stdout;
+    }
 }

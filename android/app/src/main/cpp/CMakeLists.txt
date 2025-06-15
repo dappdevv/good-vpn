@@ -7,6 +7,12 @@ project("openvpn_native")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Add compile definitions to disable fmt stdio usage
+add_compile_definitions(
+    FMT_USE_WRITE_CONSOLE=0
+    FMT_USE_WINDOWS_H=0
+)
+
 # Set OpenVPN root directory
 set(OPENVPN_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../openvpn")
 
@@ -47,6 +53,8 @@ add_library(
     openvpn_native
     SHARED
     ${OPENVPN_ROOT_DIR}/openvpn_jni.cpp
+    ${OPENVPN_ROOT_DIR}/openvpn_client.cpp
+    ${OPENVPN_ROOT_DIR}/openvpn3_wrapper.cpp
     android_compat.cpp
 )
 
