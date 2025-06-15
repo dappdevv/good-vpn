@@ -95,73 +95,94 @@ The app features a modern, intuitive interface with:
 - Real-time connection statistics
 - Authentication dialogs for secure login
 
-## Getting Started
+## 🚀 Quick Start
 
-### Prerequisites
+### 📋 Prerequisites
 
-- Flutter SDK (3.32.4+)
-- Dart SDK
-- **Android Development** (✅ Working):
-  - Android Studio
-  - Android NDK 27.0.12077973 (required)
-  - Android SDK API 35+
-  - CMake for native library compilation
-- **Other Platforms** (Planned):
-  - **iOS**: Xcode (macOS only)
-  - **macOS**: Xcode
-  - **Windows**: Visual Studio with C++ support
-  - **Linux**: Linux development tools
+- **Flutter SDK**: 3.32.4 or later
+- **Dart SDK**: Latest stable version
+- **Python 3**: For UDP forwarder (Android emulator testing)
 
-### Installation
+#### 🤖 Android Platform (✅ Fully Working)
+- **Android Studio**: Latest stable version
+- **Android NDK**: 27.0.12077973 (exact version required)
+- **Android SDK**: API 35 or later
+- **CMake**: For native library compilation (included with Android Studio)
 
-1. Clone the repository:
+#### 🍎 Other Platforms (🚧 Planned)
+- **iOS**: Xcode (macOS only)
+- **macOS**: Xcode with command line tools
+- **Windows**: Visual Studio with C++ support
+- **Linux**: GCC/Clang and development tools
+
+### 🔧 Installation & Build
+
+#### 🎯 One-Shot Android Build (Recommended)
+
 ```bash
+# 1. Clone the repository
 git clone <repository-url>
 cd fl_openvpn_client
+
+# 2. Set up Android NDK environment
+export ANDROID_NDK_ROOT=/path/to/your/ndk/27.0.12077973
+export ANDROID_ABI=x86_64  # For emulator, use arm64-v8a for device
+
+# 3. Build everything in one shot (dependencies + APK)
+./build_android.sh
+
+# 4. For Android emulator testing, start UDP forwarder
+python3 udp_forwarder.py &
+
+# 5. Install and run
+flutter install
 ```
 
-2. Install Flutter dependencies:
+#### 📱 Step-by-Step Android Build
+
 ```bash
+# 1. Clone and setup
+git clone <repository-url>
+cd fl_openvpn_client
 flutter pub get
+
+# 2. Build OpenVPN dependencies only
+./build_android.sh --deps-only
+
+# 3. Build Flutter APK
+flutter build apk --debug
+# OR for release
+flutter build apk --release
+
+# 4. Install APK
+adb install build/app/outputs/flutter-apk/app-debug.apk
 ```
 
-3. **Build OpenVPN Dependencies**:
+#### 🛠️ Build Script Options
 
-   **For Android** (✅ Required for working implementation):
-   ```bash
-   # Set up Android NDK
-   export ANDROID_NDK_ROOT=/path/to/your/ndk/27.0.12077973
-   export ANDROID_ABI=arm64-v8a  # or armeabi-v7a, x86_64, x86
-
-   # Build dependencies and app
-   ./build_project.sh android
-   ```
-
-   **For Desktop platforms** (Planned):
-   ```bash
-   # Build dependencies and app
-   ./build_project.sh desktop
-   ```
-
-   **Manual dependency build** (if needed):
-   ```bash
-   # Android dependencies only
-   cd openvpn
-   ./build_android.sh
-
-   # Desktop dependencies only
-   cd openvpn
-   ./build_dependencies.sh
-   ```
-
-4. Run the app:
 ```bash
-# Android (✅ Fully Working)
-flutter run -d android
+# Clean build (removes all build artifacts)
+./build_android.sh --clean
 
-# Other platforms (planned)
+# Build release APK
+./build_android.sh --release
+
+# Only build dependencies, skip Flutter build
+./build_android.sh --deps-only
+
+# Skip dependencies, only build Flutter APK
+./build_android.sh --skip-deps
+
+# Show help
+./build_android.sh --help
+```
+
+#### 🖥️ Desktop Platforms (🚧 Coming Soon)
+
+```bash
+# Build for desktop platforms (planned)
+./build_project.sh desktop
 flutter run -d macos
-flutter run -d ios
 flutter run -d windows
 flutter run -d linux
 ```

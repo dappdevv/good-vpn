@@ -1,22 +1,28 @@
-# Build and Deployment Guide
+# 🏗️ Complete Build and Deployment Guide
 
 ## 🎯 Overview
 
-This guide provides step-by-step instructions for building and deploying the OpenVPN Flutter Client with native OpenVPN3 integration.
+This guide provides comprehensive instructions for building and deploying the OpenVPN Flutter Client with native OpenVPN3 integration. The project includes automated build scripts for one-shot compilation.
 
 ## ✅ Prerequisites
 
 ### System Requirements
-- **macOS**: 10.15+ (for development)
-- **Flutter**: 3.32.4 or higher
-- **Android Studio**: Latest stable version
+- **Operating System**: macOS 10.15+, Linux, or Windows 10+
+- **Flutter SDK**: 3.32.4 or higher
+- **Python 3**: For UDP forwarder (Android emulator testing)
 - **Git**: For version control
 
-### Android Development Setup
-1. **Android Studio**: Install with default SDK
-2. **Android NDK**: Version 27.0.12077973 (critical requirement)
-3. **CMake**: For native library compilation
+### Android Development Setup (✅ Fully Supported)
+1. **Android Studio**: Latest stable version with default SDK
+2. **Android NDK**: Version 27.0.12077973 (exact version required)
+3. **CMake**: For native library compilation (included with Android Studio)
 4. **Android SDK**: API 35+ required
+
+### Other Platforms (🚧 Planned)
+- **iOS**: Xcode with iOS SDK (macOS only)
+- **macOS**: Xcode with command line tools
+- **Windows**: Visual Studio with C++ support
+- **Linux**: GCC/Clang and development tools
 
 ## 🔧 Environment Setup
 
@@ -78,30 +84,63 @@ grep -r "27.0.12077973" android/
 
 ## 🏗️ Building the Application
 
-### Debug Build
+### 🚀 One-Shot Build (Recommended)
+
+The project includes an automated build script that handles everything:
+
 ```bash
-# Clean previous builds
-flutter clean
-
-# Build debug APK
-flutter build apk --debug
-
-# Or run directly on device
-flutter run -d <device-id>
-```
-
-### Release Build
-```bash
-# Clean build
-flutter clean
+# Build debug APK with all dependencies
+./build_android.sh
 
 # Build release APK
-flutter build apk --release
+./build_android.sh --release
 
-# Output location: build/app/outputs/flutter-apk/app-release.apk
+# Clean build (removes all build artifacts)
+./build_android.sh --clean
+
+# Only build OpenVPN dependencies
+./build_android.sh --deps-only
+
+# Skip dependencies, only build Flutter APK
+./build_android.sh --skip-deps
+
+# Show all options
+./build_android.sh --help
 ```
 
-### Build Verification
+### 📱 Manual Build Process
+
+#### Debug Build
+```bash
+# 1. Set up environment
+export ANDROID_NDK_ROOT=/path/to/ndk/27.0.12077973
+export ANDROID_ABI=x86_64  # For emulator, use arm64-v8a for device
+
+# 2. Build OpenVPN dependencies
+cd openvpn
+./build_android.sh
+cd ..
+
+# 3. Build Flutter APK
+flutter clean
+flutter build apk --debug
+
+# 4. Install and run
+flutter install
+```
+
+#### Release Build
+```bash
+# 1. Clean previous builds
+flutter clean
+
+# 2. Build release APK
+flutter build apk --release
+
+# Output: build/app/outputs/flutter-apk/app-release.apk
+```
+
+### 🔍 Build Verification
 ```bash
 # Check if native library is included
 unzip -l build/app/outputs/flutter-apk/app-debug.apk | grep libopenvpn_native.so
@@ -111,6 +150,9 @@ unzip -l build/app/outputs/flutter-apk/app-debug.apk | grep libopenvpn_native.so
 # lib/armeabi-v7a/libopenvpn_native.so
 # lib/x86/libopenvpn_native.so
 # lib/x86_64/libopenvpn_native.so
+
+# Check APK size and contents
+ls -lh build/app/outputs/flutter-apk/
 ```
 
 ## 🧪 Testing Setup
@@ -127,20 +169,48 @@ emulator -avd test_device
 flutter devices
 ```
 
-### 2. Test Configuration
-Place test .ovpn files in `sample_config/` directory:
+### 2. UDP Forwarder for Emulator Testing (Required)
+
+The Android emulator cannot directly access external OpenVPN servers. Use the included UDP forwarder:
+
 ```bash
-mkdir -p sample_config
-# Copy your .ovpn files here
+# Start UDP forwarder (required for emulator testing)
+python3 udp_forwarder.py &
+
+# The forwarder listens on localhost:1194 and forwards to your OpenVPN server
+# Configure your .ovpn files to connect to 10.0.2.2:1194 (emulator's host)
 ```
 
-### 3. Run Tests
+**UDP Forwarder Configuration:**
+- **Local Port**: 1194 (listens on all interfaces)
+- **Remote Server**: 172.16.109.4:1194 (configurable in script)
+- **Protocol**: UDP packet forwarding with client tracking
+
+### 3. Test Configuration
+Place test .ovpn files in `sample_configs/` directory:
 ```bash
-# Run on emulator
+# Sample configurations are included
+ls sample_configs/
+# vm01.ovpn - Working test configuration
+# corporate_vpn.ovpn - Enterprise example
+# sample_server.ovpn - Basic server example
+```
+
+### 4. Run Tests
+```bash
+# 1. Start UDP forwarder (for emulator)
+python3 udp_forwarder.py &
+
+# 2. Run app on emulator
 flutter run -d emulator-5554
 
-# Monitor logs
-adb logcat | grep -E "(flutter|OpenVPN|Exception)"
+# 3. Monitor logs
+adb logcat | grep -E "(flutter|OpenVPN|OpenVPN_JNI|Exception)"
+
+# 4. Test connection flow
+# - Import vm01.ovpn configuration
+# - Connect and verify VPN IP assignment
+# - Check data transfer statistics
 ```
 
 ## 🚀 Deployment

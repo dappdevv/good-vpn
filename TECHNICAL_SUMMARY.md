@@ -221,6 +221,36 @@ stats.localIp = last_vpn_ip_;
 2. **macOS Support**: macOS VPN implementation
 3. **Advanced Features**: Split tunneling, custom DNS, etc.
 
+## 🏗️ Build System
+
+### Automated Build Scripts
+- **`build_android.sh`**: Complete one-shot Android APK build
+- **`openvpn/build_android.sh`**: OpenVPN dependencies build
+- **`build_project.sh`**: Legacy multi-platform build script
+
+### Build Process
+```bash
+# One-shot build (recommended)
+./build_android.sh
+
+# Manual build process
+export ANDROID_NDK_ROOT=/path/to/ndk/27.0.12077973
+cd openvpn && ./build_android.sh && cd ..
+flutter build apk --debug
+```
+
+### Build Features
+- **Dependency Management**: Automated OpenVPN3 Core compilation
+- **Multi-Architecture**: x86_64, arm64-v8a, armeabi-v7a support
+- **Clean Builds**: Proper build artifact cleanup
+- **Verification**: APK content validation
+- **Error Handling**: Comprehensive build error reporting
+
+### Testing Infrastructure
+- **UDP Forwarder**: `udp_forwarder.py` for emulator testing
+- **Sample Configs**: Pre-configured .ovpn files for testing
+- **Automated Verification**: Build and runtime validation
+
 ## 📋 Dependencies
 
 ### Flutter Dependencies
@@ -231,15 +261,18 @@ provider: ^6.1.2
 ```
 
 ### Android Native Dependencies
-- **OpenVPN3 Core**: Latest stable version
-- **ASIO**: Networking library for OpenVPN3
-- **OpenSSL**: Cryptographic library
-- **NDK**: 27.0.12077973
+- **OpenVPN3 Core**: v3.11.1 (pinned stable version)
+- **ASIO**: v1.30.2 (networking library)
+- **OpenSSL**: v3.3.2 (cryptographic library)
+- **fmt**: v11.0.2 (formatting library)
+- **LZ4**: v1.10.0 (compression library)
+- **NDK**: 27.0.12077973 (exact version required)
 
 ### Build Tools
 - **CMake**: Native library compilation
 - **Gradle**: Android build system
 - **Flutter**: 3.32.4+
+- **Python 3**: UDP forwarder for testing
 
 ## 🎯 Conclusion
 
