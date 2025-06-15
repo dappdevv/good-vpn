@@ -29,6 +29,9 @@ Cross-platform OpenVPN client built with Flutter, featuring **complete, working 
 - **Real Connections**: ✅ Actual OpenVPN server connections established
 - **Authentication**: ✅ Username/password authentication working
 - **Status Updates**: ✅ Real-time status: connecting → authenticating → connected
+- **VPN IP Display**: ✅ Persistent VPN IP address display throughout connection
+- **Stats Polling**: ✅ Real-time connection statistics with proper type handling
+- **Multiple Cycles**: ✅ Reliable multiple connect/disconnect cycles
 - **VPN Service**: ✅ Android VPN service with foreground service compliance
 - **Threading**: ✅ Proper main thread handling for UI updates
 - **Testing**: ✅ Tested with real Ubuntu 24.04 OpenVPN server
@@ -82,6 +85,9 @@ Cross-platform OpenVPN client built with Flutter, featuring **complete, working 
 ✓ Authentication completed successfully
 ✓ VPN tunnel active with real traffic routing
 ✓ Status updates flowing correctly: connecting → authenticating → connected
+✓ VPN IP address displayed persistently throughout connection
+✓ Real-time statistics polling working with proper type handling
+✓ Multiple connect/disconnect cycles working reliably
 ✓ Clean disconnect process working
 ✓ Foreground service compliant with Android 14+
 ✓ No crashes or threading violations
@@ -95,7 +101,9 @@ Cross-platform OpenVPN client built with Flutter, featuring **complete, working 
 ✓ Connection Time: 2-3 seconds average
 ✓ Status Updates: Real-time with <100ms latency
 ✓ VPN Interface: TUN interface established successfully
+✓ VPN IP Assignment: Client IP (10.8.0.2) properly assigned and displayed
 ✓ Traffic Routing: All network traffic routed through VPN
+✓ Statistics Polling: Real-time stats updates every 2 seconds
 ✓ Disconnect: Clean shutdown without errors
 ✓ Service Management: Proper foreground service lifecycle
 ✓ Memory Usage: ~50MB stable runtime usage
@@ -295,6 +303,8 @@ The OpenVPN Flutter Client now includes:
 - ✅ **Service Compliance**: Android 14+ foreground service requirements met
 - ✅ **Threading Safety**: Proper main thread handling for UI updates
 - ✅ **Real-time Updates**: Live status monitoring and statistics
+- ✅ **VPN IP Persistence**: Reliable VPN IP address display throughout connection
+- ✅ **Multiple Connection Cycles**: Robust reconnection support with fresh instances
 - ✅ **Production Testing**: Tested with real OpenVPN server infrastructure
 - ✅ **Build System**: Robust NDK + CMake configuration working
 - ✅ **Error Handling**: Comprehensive error handling and recovery

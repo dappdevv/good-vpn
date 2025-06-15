@@ -198,7 +198,15 @@ class OpenVpnService implements VpnService {
     try {
       final result = await _channel.invokeMethod('getConnectionStats');
       debugPrint('📊 Real connection stats: $result');
-      return result as Map<String, dynamic>?;
+
+      if (result == null) return null;
+
+      // Convert Map<Object?, Object?> to Map<String, dynamic>
+      if (result is Map) {
+        return Map<String, dynamic>.from(result);
+      }
+
+      return null;
     } catch (e) {
       debugPrint('❌ Error getting connection stats: $e');
       return null;

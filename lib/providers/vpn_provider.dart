@@ -15,6 +15,7 @@ class VpnProvider extends ChangeNotifier {
   VpnStatus _status = const VpnStatus(state: VpnConnectionState.disconnected);
   bool _isInitialized = false;
   StreamSubscription? _statusSubscription;
+  Timer? _statsTimer;
   
   // Getters
   List<VpnConfig> get configs => List.unmodifiable(_configs);
@@ -36,6 +37,14 @@ class VpnProvider extends ChangeNotifier {
       
       _statusSubscription = _vpnService.statusStream.listen((status) {
         _status = status;
+
+        // Start/stop stats polling based on connection state
+        if (status.isConnected && _statsTimer == null) {
+          _startStatsPolling();
+        } else if (!status.isConnected && _statsTimer != null) {
+          _stopStatsPolling();
+        }
+
         notifyListeners();
       });
       
@@ -206,10 +215,43 @@ class VpnProvider extends ChangeNotifier {
   Future<Map<String, dynamic>?> getConnectionStats() async {
     return await _vpnService.getConnectionStats();
   }
+
+  // Start periodic stats polling when connected
+  void _startStatsPolling() {
+    debugPrint('🔄 Starting stats polling...');
+    _statsTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
+      try {
+        final stats = await _vpnService.getConnectionStats();
+        if (stats != null && _status.isConnected) {
+          // Update status with latest stats including VPN IP
+          _status = _status.copyWith(
+            serverIp: stats['serverIp'] as String?,
+            localIp: stats['localIp'] as String?,
+            bytesIn: stats['bytesIn'] as int?,
+            bytesOut: stats['bytesOut'] as int?,
+            duration: stats['duration'] != null
+                ? Duration(seconds: stats['duration'] as int)
+                : null,
+          );
+          notifyListeners();
+        }
+      } catch (e) {
+        debugPrint('❌ Error polling stats: $e');
+      }
+    });
+  }
+
+  // Stop stats polling
+  void _stopStatsPolling() {
+    debugPrint('⏹️ Stopping stats polling...');
+    _statsTimer?.cancel();
+    _statsTimer = null;
+  }
   
   @override
   void dispose() {
     _statusSubscription?.cancel();
+    _stopStatsPolling();
     _vpnService.dispose();
     super.dispose();
   }
