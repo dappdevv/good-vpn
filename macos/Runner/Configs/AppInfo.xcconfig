@@ -8,7 +8,10 @@
 PRODUCT_NAME = fl_openvpn_client
 
 // The application's bundle identifier
+// TODO: Replace with your Apple Developer Account bundle ID
+// Example: com.yourteam.fl-openvpn-client
 PRODUCT_BUNDLE_IDENTIFIER = com.example.flOpenvpnClient
 
 // The copyright displayed in application information
+// TODO: Replace with your organization name
 PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.

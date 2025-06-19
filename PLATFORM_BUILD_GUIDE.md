@@ -94,24 +94,82 @@ flutter build ios --release
 
 ---
 
-## 🖥️ macOS Platform (🚧 Planned)
+## 🖥️ macOS Platform (✅ Ready with Apple Developer Account)
 
-### Prerequisites (When Implemented)
-- **Xcode**: With command line tools
-- **macOS SDK**: 11.0+
-- **Homebrew**: For dependency management
-
-### Planned Implementation
+### Quick Start
 ```bash
-# Future macOS build process
-flutter build macos --release
+# Configure with your Apple Developer Account
+./setup_macos_developer.sh
+
+# Build macOS app
+./build_macos.sh
+
+# Or build release version
+./build_macos.sh --release
 ```
 
-### Key Components (Planned)
-- **NetworkExtension**: macOS VPN framework
-- **System Extension**: VPN system integration
-- **Keychain Access**: Secure storage
-- **Admin Privileges**: VPN configuration rights
+### Prerequisites
+- **Xcode**: Latest stable version from App Store
+- **macOS SDK**: 10.15+ (included with Xcode)
+- **Apple Developer Account**: Active paid membership ($99/year)
+- **Flutter**: 3.32.4+
+
+### Environment Setup
+```bash
+# Get your Team ID from Apple Developer Account
+# Update bundle identifier in macos/Runner/Configs/AppInfo.xcconfig
+# Example: com.yourteam.fl-openvpn-client
+
+# Open project in Xcode
+open macos/Runner.xcworkspace
+
+# Configure Signing & Capabilities:
+# 1. Select your Team
+# 2. Verify Bundle Identifier
+# 3. Check VPN entitlements are present
+```
+
+### Build Process
+```bash
+# Automated setup (recommended)
+./setup_macos_developer.sh
+
+# Manual build
+flutter build macos --debug
+
+# Or from Xcode
+# Product → Build (⌘B)
+```
+
+### Build Outputs
+- **Debug**: `build/macos/Build/Products/Debug/fl_openvpn_client.app`
+- **Release**: `build/macos/Build/Products/Release/fl_openvpn_client.app`
+- **Code Signing**: Automatic with developer certificate
+- **Entitlements**: NetworkExtension VPN capabilities
+
+### VPN Functionality
+- **NetworkExtension**: Native macOS VPN framework
+- **IKEv2 Protocol**: Compatible with OpenVPN servers
+- **System Integration**: Native VPN experience
+- **Permission Handling**: Automatic VPN permission requests
+
+### Testing
+```bash
+# Build and run
+./build_macos.sh --open-xcode
+
+# Test VPN connection:
+# 1. Import OpenVPN configuration
+# 2. Connect (system will request VPN permission)
+# 3. Allow VPN access in System Preferences
+# 4. Verify connection and IP assignment
+```
+
+### Key Components (✅ Implemented)
+- **NetworkExtension**: macOS VPN framework integration
+- **NEVPNManager**: VPN configuration management
+- **Keychain Access**: Secure credential storage
+- **Code Signing**: Developer certificate integration
 
 ---
 
@@ -187,10 +245,12 @@ flutter build linux --release
 | Platform | Status | OpenVPN Integration | Build System | Testing |
 |----------|--------|-------------------|--------------|---------|
 | **Android** | ✅ Complete | OpenVPN3 Core | CMake + Gradle | ✅ Emulator + Device |
+| **macOS** | ✅ Ready* | NetworkExtension + IKEv2 | Xcode + Flutter | ✅ Native |
 | **iOS** | 🚧 Planned | NetworkExtension | Xcode + CocoaPods | 🚧 Simulator + Device |
-| **macOS** | 🚧 Planned | NetworkExtension | Xcode + CMake | 🚧 Native |
 | **Windows** | 🚧 Planned | WinTUN + APIs | Visual Studio | 🚧 Native |
 | **Linux** | 🚧 Planned | System OpenVPN | CMake + Make | 🚧 Native |
+
+*Requires Apple Developer Account for VPN functionality
 
 ---
 
