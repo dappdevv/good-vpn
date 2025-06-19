@@ -6,6 +6,7 @@ import '../models/vpn_status.dart';
 import '../services/vpn_service.dart';
 import '../services/openvpn_service.dart';
 import '../utils/storage_helper.dart';
+import '../utils/sample_configs.dart';
 
 class VpnProvider extends ChangeNotifier {
   final VpnService _vpnService = OpenVpnService();
@@ -29,12 +30,18 @@ class VpnProvider extends ChangeNotifier {
   // Initialize the provider
   Future<void> initialize() async {
     if (_isInitialized) return;
-    
+
     try {
       await _vpnService.initialize();
       await _loadConfigs();
+
+      // Load default VM config if no configs exist
+      if (_configs.isEmpty) {
+        await _loadDefaultVmConfig();
+      }
+
       await _loadActiveConfig();
-      
+
       _statusSubscription = _vpnService.statusStream.listen((status) {
         _status = status;
 
@@ -47,7 +54,7 @@ class VpnProvider extends ChangeNotifier {
 
         notifyListeners();
       });
-      
+
       _isInitialized = true;
       notifyListeners();
     } catch (e) {
@@ -67,6 +74,20 @@ class VpnProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Failed to load configs: $e');
       _configs = [];
+    }
+  }
+
+  // Load default VM config for easy testing
+  Future<void> _loadDefaultVmConfig() async {
+    try {
+      final defaultConfig = await SampleConfigs.loadDefaultVmConfig();
+      if (defaultConfig != null) {
+        _configs.add(defaultConfig);
+        await _saveConfigs();
+        debugPrint('✅ Default VM config loaded automatically for testing');
+      }
+    } catch (e) {
+      debugPrint('❌ Failed to load default VM config: $e');
     }
   }
 

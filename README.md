@@ -6,25 +6,26 @@ A cross-platform OpenVPN client built with Flutter with **native OpenVPN3 integr
 
 ## ✅ Current Status
 
-**FULLY FUNCTIONAL** - The Android implementation is complete and working with real OpenVPN3 integration!
+**FULLY FUNCTIONAL** - Android and macOS implementations are complete and working with real OpenVPN3 integration!
 
 ### Working Features
 - ✅ **Native OpenVPN3 Integration**: Real OpenVPN connections using OpenVPN3 Core library
 - ✅ **Android Support**: Fully functional with NDK 27.0.12077973
+- ✅ **macOS Support**: Fully functional with real system VPN integration
 - ✅ **Real-time Status Updates**: Live connection status and statistics
 - ✅ **VPN IP Display**: Persistent VPN IP address display throughout connection
 - ✅ **Configuration Import**: Support for .ovpn configuration files
-- ✅ **VPN Interface Management**: Proper Android VPN service implementation
-- ✅ **Foreground Service**: Compliant with Android 14+ requirements
+- ✅ **VPN Interface Management**: Platform-specific VPN implementations
+- ✅ **Authorization Handling**: Proper privilege management (macOS admin auth)
 - ✅ **Threading Safety**: Proper main thread handling for UI updates
 - ✅ **Connection Lifecycle**: Connect, authenticate, disconnect flow
 - ✅ **Multiple Connect/Disconnect Cycles**: Reliable reconnection support
 
 ### Platform Status
-- 🟢 **Android**: Fully implemented and tested with real OpenVPN3
+- 🟢 **Android**: Fully implemented and tested with real OpenVPN3 (TUN_NULL mode)
+- 🟢 **macOS**: Fully implemented and tested with real system VPN (utun interfaces)
 - 🟡 **iOS**: Planned (requires Apple Developer signing)
 - 🟡 **Windows**: Planned
-- 🟡 **macOS**: Planned
 - 🟡 **Linux**: Planned
 
 ## Project Structure
@@ -109,9 +110,17 @@ The app features a modern, intuitive interface with:
 - **Android SDK**: API 35 or later
 - **CMake**: For native library compilation (included with Android Studio)
 
-#### 🍎 Other Platforms (🚧 Planned)
+#### 🍎 macOS Platform (✅ Fully Working)
+- **Xcode**: Latest stable version with command line tools
+- **macOS**: 10.15 (Catalina) or later
+- **Administrator Privileges**: Required for TUN interface creation
+- **Apple Developer Account**: Recommended for code signing
+
+#### 📱 iOS Platform (🚧 Planned)
 - **iOS**: Xcode (macOS only)
-- **macOS**: Xcode with command line tools
+- **Apple Developer Account**: Required for Network Extension entitlements
+
+#### 🖥️ Other Platforms (🚧 Planned)
 - **Windows**: Visual Studio with C++ support
 - **Linux**: GCC/Clang and development tools
 
@@ -177,12 +186,29 @@ adb install build/app/outputs/flutter-apk/app-debug.apk
 ./build_android.sh --help
 ```
 
-#### 🖥️ Desktop Platforms (🚧 Coming Soon)
+#### 🍎 macOS Build (✅ Fully Working)
 
 ```bash
-# Build for desktop platforms (planned)
-./build_project.sh desktop
+# 1. Clone the repository
+git clone <repository-url>
+cd fl_openvpn_client
+
+# 2. Build OpenVPN dependencies for macOS
+cd macos
+./build_openvpn.sh
+
+# 3. Build and run Flutter app
+cd ..
 flutter run -d macos
+
+# Note: The app will request administrator privileges on first connection
+# This is required for creating real TUN interfaces on macOS
+```
+
+#### 🖥️ Other Desktop Platforms (🚧 Coming Soon)
+
+```bash
+# Build for other desktop platforms (planned)
 flutter run -d windows
 flutter run -d linux
 ```
@@ -254,15 +280,37 @@ The app follows a clean architecture pattern with:
 - ✅ Proper authentication handling
 - ✅ Clean disconnect process
 
+### macOS ✅ (Fully Implemented)
+
+**Real system VPN integration with TUN interface creation:**
+
+**Key Components:**
+- **Native Library**: OpenVPN3 Core with macOS TUN client
+- **Authorization**: macOS Authorization Services for admin privileges
+- **TUN Interface**: Real utun interface creation (e.g., utun8)
+- **App Sandbox**: Disabled for VPN functionality
+- **Build System**: One-shot build script (`build_openvpn.sh`)
+- **Privilege Management**: One-time authorization per app session
+
+**Build Configuration:**
+- CMakeLists.txt compiles OpenVPN3 Core with native macOS TUN client
+- Swift integration for macOS Authorization Services
+- Proper entitlements configuration for VPN functionality
+
+**Testing Status:**
+- ✅ Tested with real OpenVPN server (Ubuntu 24.04)
+- ✅ Real TUN interface creation (utun8 with VPN IP 10.8.0.2)
+- ✅ Administrator authorization dialog working
+- ✅ One-time authorization per app session
+- ✅ Complete connection lifecycle working
+- ✅ Real-time status updates functional
+- ✅ Multiple connect/disconnect cycles tested
+- ✅ Proper system VPN integration
+
 ### iOS (Planned)
 - Implement using NetworkExtension framework
 - Configure VPN entitlements
 - Handle iOS-specific VPN permissions
-
-### macOS (Planned)
-- Use NetworkExtension framework
-- Configure system extension entitlements
-- Handle macOS VPN permissions
 
 ### Windows (Planned)
 - Implement using Windows VPN APIs

@@ -34,8 +34,8 @@ echo "📝 Please provide your Apple Developer Account information:"
 echo ""
 
 read -p "Enter your Team ID (found in Apple Developer Account): " TEAM_ID
-read -p "Enter your Bundle Identifier (e.g., com.yourteam.fl-openvpn-client): " BUNDLE_ID
-read -p "Enter your Organization Name: " ORG_NAME
+read -p "Enter your Bundle Identifier (e.g., com.bilinluo.fl-openvpn-client): " BUNDLE_ID
+read -p "Enter your Organization Name (e.g., Bilin Luo): " ORG_NAME
 
 if [ -z "$TEAM_ID" ] || [ -z "$BUNDLE_ID" ] || [ -z "$ORG_NAME" ]; then
     echo "❌ All fields are required. Please run the script again."
@@ -103,7 +103,11 @@ cd macos && rm -rf build && cd ..
 echo "📦 Getting Flutter dependencies..."
 flutter pub get
 
-echo "🔨 Building macOS app..."
+echo "� Initializing Xcode build tools..."
+echo "   Running xcodebuild -runFirstLaunch to fix plugin issues..."
+sudo xcodebuild -runFirstLaunch
+
+echo "�🔨 Building macOS app..."
 flutter build macos --debug
 
 if [ $? -eq 0 ]; then

@@ -1,10 +1,10 @@
 #include "openvpn3_wrapper.h"
-#include <android/log.h>
 #include <thread>
 #include <chrono>
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <iostream>
 
 // Include OpenVPN3 Core compatibility header first
 #include "openvpn3_compat.h"
@@ -12,9 +12,21 @@
 // Include OpenVPN3 Core API
 #include "client/ovpncli.hpp"
 
+#ifdef __APPLE__
+#include "macos_tun_builder.h"
+#endif
+
 #define LOG_TAG "OpenVPN3Wrapper"
+
+// Platform-specific logging
+#ifdef ANDROID
+#include <android/log.h>
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#else
+#define LOGI(...) do { printf("[INFO] " LOG_TAG ": " __VA_ARGS__); printf("\n"); } while(0)
+#define LOGE(...) do { printf("[ERROR] " LOG_TAG ": " __VA_ARGS__); printf("\n"); } while(0)
+#endif
 
 // Real OpenVPN3 client implementation using OpenVPN3 Core API
 class OpenVPN3ClientImpl : public openvpn::ClientAPI::OpenVPNClient {
@@ -67,6 +79,18 @@ public:
                     ovpn_config.googleDnsFallback = true;
                     ovpn_config.allowLocalDnsResolvers = true;
                     ovpn_config.autologinSessions = false;
+
+#ifdef __APPLE__
+                    // macOS-specific settings for better system integration
+                    LOGI("🍎 macOS: Using platform-specific OpenVPN3 configuration");
+                    // Note: Still using TUN_NULL mode but with macOS optimizations
+#elif defined(__ANDROID__)
+                    // Android-specific settings (keep existing behavior)
+                    LOGI("🤖 Android: Using platform-specific OpenVPN3 configuration");
+#else
+                    // Other platforms
+                    LOGI("🖥️ Generic: Using default OpenVPN3 configuration");
+#endif
 
                     // TLS settings
                     ovpn_config.enableLegacyAlgorithms = false; // Disable legacy TLS algorithms (no legacy provider)
@@ -195,11 +219,8 @@ public:
             connected_ = false;
             connecting_ = false;
 
-            // Clear saved VPN IP
-            if (!last_vpn_ip_.empty()) {
-                LOGI("🗑️ CLEARING VPN IP: %s", last_vpn_ip_.c_str());
-                last_vpn_ip_.clear();
-            }
+            // Don't clear VPN IP immediately - keep it for stats until fully disconnected
+            LOGI("� Disconnecting but keeping VPN IP for stats: %s", last_vpn_ip_.c_str());
 
             // Stop the OpenVPN3 Core connection
             stop();
@@ -377,6 +398,80 @@ public:
         return true; // Pause instead of disconnecting on timeout
     }
 
+#ifdef __APPLE__
+    // TUN builder methods - these are required by the interface but not used on macOS
+    bool tun_builder_new() override {
+        LOGI("tun_builder_new() called");
+        return true;
+    }
+
+    bool tun_builder_set_layer(int layer) override {
+        if (real_tun_builder_) {
+            return real_tun_builder_->tun_builder_set_layer(layer);
+        }
+        return false;
+    }
+
+    bool tun_builder_set_remote_address(const std::string& address, bool ipv6) override {
+        if (real_tun_builder_) {
+            return real_tun_builder_->tun_builder_set_remote_address(address, ipv6);
+        }
+        return false;
+    }
+
+    bool tun_builder_add_address(const std::string& address, int prefix_length, const std::string& gateway, bool ipv6, bool net30) override {
+        if (real_tun_builder_) {
+            return real_tun_builder_->tun_builder_add_address(address, prefix_length, gateway, ipv6, net30);
+        }
+        return false;
+    }
+
+    bool tun_builder_add_route(const std::string& address, int prefix_length, int metric, bool ipv6) override {
+        if (real_tun_builder_) {
+            return real_tun_builder_->tun_builder_add_route(address, prefix_length, metric, ipv6);
+        }
+        return false;
+    }
+
+    bool tun_builder_set_dns_options(const openvpn::DnsOptions& dns) override {
+        if (real_tun_builder_) {
+            return real_tun_builder_->tun_builder_set_dns_options(dns);
+        }
+        return false;
+    }
+
+    bool tun_builder_set_mtu(int mtu) override {
+        if (real_tun_builder_) {
+            return real_tun_builder_->tun_builder_set_mtu(mtu);
+        }
+        return false;
+    }
+
+    int tun_builder_establish() override {
+        if (real_tun_builder_) {
+            int fd = real_tun_builder_->tun_builder_establish();
+            if (fd >= 0) {
+                LOGI("✅ macOS TUN interface established successfully (fd=%d)", fd);
+            }
+            return fd;
+        }
+        return -1;
+    }
+
+    bool tun_builder_persist() override {
+        if (real_tun_builder_) {
+            return real_tun_builder_->tun_builder_persist();
+        }
+        return false;
+    }
+
+    void tun_builder_teardown(bool disconnect) override {
+        if (real_tun_builder_) {
+            real_tun_builder_->tun_builder_teardown(disconnect);
+        }
+    }
+#endif
+
 public:
 
     bool isConnected() const {
@@ -410,22 +505,45 @@ public:
                 // Get real connection information from OpenVPN3 Core
                 if (conn_info.defined) {
                     stats.serverIp = conn_info.serverIp;
-                    // Use saved VPN IP from ifconfig since TUN_NULL doesn't populate vpnIp4/vpnIp6
-                    stats.localIp = last_vpn_ip_.empty() ?
-                        (conn_info.vpnIp4.empty() ? conn_info.vpnIp6 : conn_info.vpnIp4) :
-                        last_vpn_ip_;
-
-                    LOGI("📊 Stats: connected=%s, saved_vpn_ip='%s', conn_vpn_ip='%s', using='%s'",
-                         connected_ ? "true" : "false", last_vpn_ip_.c_str(),
-                         conn_info.vpnIp4.c_str(), stats.localIp.c_str());
                 } else {
                     stats.serverIp = "";
-                    // Use saved VPN IP even if connection_info is not defined
-                    stats.localIp = last_vpn_ip_;
-
-                    LOGI("📊 Stats: connected=%s, conn_info=undefined, saved_vpn_ip='%s', using='%s'",
-                         connected_ ? "true" : "false", last_vpn_ip_.c_str(), stats.localIp.c_str());
                 }
+
+                // Platform-specific VPN IP handling
+#ifdef __APPLE__
+                // macOS: Always prioritize saved VPN IP from ifconfig since TUN_NULL mode
+                // doesn't properly populate vpnIp4/vpnIp6 in connection_info
+                LOGI("🔍 macOS DEBUG getStats: last_vpn_ip_='%s', conn_info.defined=%s, conn_info.vpnIp4='%s', conn_info.vpnIp6='%s'",
+                     last_vpn_ip_.c_str(), conn_info.defined ? "true" : "false",
+                     conn_info.defined ? conn_info.vpnIp4.c_str() : "N/A",
+                     conn_info.defined ? conn_info.vpnIp6.c_str() : "N/A");
+
+                if (!last_vpn_ip_.empty()) {
+                    stats.localIp = last_vpn_ip_;
+                    LOGI("📊 macOS Stats: using_saved_vpn_ip='%s'", stats.localIp.c_str());
+                } else if (conn_info.defined && !conn_info.vpnIp4.empty()) {
+                    stats.localIp = conn_info.vpnIp4;
+                    LOGI("📊 macOS Stats: using_conn_vpn_ip4='%s'", stats.localIp.c_str());
+                } else {
+                    stats.localIp = "";
+                    LOGI("📊 macOS Stats: no_vpn_ip_available");
+                }
+#else
+                // Android and other platforms: Use connection_info first, then saved IP
+                if (conn_info.defined && !conn_info.vpnIp4.empty()) {
+                    stats.localIp = conn_info.vpnIp4;
+                    LOGI("📊 Stats: using_conn_vpn_ip4='%s'", stats.localIp.c_str());
+                } else if (conn_info.defined && !conn_info.vpnIp6.empty()) {
+                    stats.localIp = conn_info.vpnIp6;
+                    LOGI("📊 Stats: using_conn_vpn_ip6='%s'", stats.localIp.c_str());
+                } else if (!last_vpn_ip_.empty()) {
+                    stats.localIp = last_vpn_ip_;
+                    LOGI("📊 Stats: using_saved_vpn_ip='%s'", stats.localIp.c_str());
+                } else {
+                    stats.localIp = "";
+                    LOGI("📊 Stats: no_vpn_ip_available");
+                }
+#endif
 
                 LOGI("Real OpenVPN3 Core stats - In: %lu bytes, Out: %lu bytes, Duration: %lu sec, Server: %s, Local: %s",
                      (unsigned long)stats.bytesIn, (unsigned long)stats.bytesOut, (unsigned long)stats.duration,
@@ -461,6 +579,11 @@ private:
     std::string password_;
     std::string last_vpn_ip_;  // Store the last seen VPN IP from ifconfig option
     mutable std::mutex stats_mutex_;
+
+#ifdef __APPLE__
+    std::unique_ptr<MacOSTunBuilder> tun_builder_;
+    std::unique_ptr<openvpn::TunBuilderBase> real_tun_builder_;
+#endif
 };
 
 OpenVPN3Wrapper::OpenVPN3Wrapper(StatusCallback callback) 

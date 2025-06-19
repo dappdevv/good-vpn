@@ -1,6 +1,56 @@
 import Foundation
 import NetworkExtension
 import FlutterMacOS
+import Security
+import ServiceManagement
+
+// C interface to OpenVPN library
+typealias OpenVPNClientPtr = OpaquePointer
+
+@_silgen_name("openvpn_client_create")
+func openvpn_client_create() -> OpenVPNClientPtr?
+
+@_silgen_name("openvpn_client_destroy")
+func openvpn_client_destroy(_ client: OpenVPNClientPtr)
+
+@_silgen_name("openvpn_client_connect")
+func openvpn_client_connect(_ client: OpenVPNClientPtr, _ config: UnsafePointer<CChar>, _ username: UnsafePointer<CChar>?, _ password: UnsafePointer<CChar>?) -> Bool
+
+@_silgen_name("openvpn_client_disconnect")
+func openvpn_client_disconnect(_ client: OpenVPNClientPtr)
+
+@_silgen_name("openvpn_client_get_status")
+func openvpn_client_get_status(_ client: OpenVPNClientPtr) -> UnsafePointer<CChar>?
+
+@_silgen_name("openvpn_client_is_available")
+func openvpn_client_is_available() -> Bool
+
+@_silgen_name("openvpn_client_get_bytes_in")
+func openvpn_client_get_bytes_in(_ client: OpenVPNClientPtr) -> UInt64
+
+@_silgen_name("openvpn_client_get_bytes_out")
+func openvpn_client_get_bytes_out(_ client: OpenVPNClientPtr) -> UInt64
+
+@_silgen_name("openvpn_client_get_duration")
+func openvpn_client_get_duration(_ client: OpenVPNClientPtr) -> UInt64
+
+@_silgen_name("openvpn_client_get_server_ip")
+func openvpn_client_get_server_ip(_ client: OpenVPNClientPtr) -> UnsafePointer<CChar>?
+
+@_silgen_name("openvpn_client_get_local_ip")
+func openvpn_client_get_local_ip(_ client: OpenVPNClientPtr) -> UnsafePointer<CChar>?
+
+// Stats structure matching C interface
+struct ConnectionStatsC {
+    let bytesIn: UInt64
+    let bytesOut: UInt64
+    let duration: UInt64
+    let serverIp: (CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar)
+    let localIp: (CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar, CChar)
+}
+
+@_silgen_name("openvpn_client_get_stats")
+func openvpn_client_get_stats(_ client: OpenVPNClientPtr) -> ConnectionStatsC
 
 class MacVpnManager: NSObject {
     private var vpnManager: NEVPNManager?
@@ -10,14 +60,27 @@ class MacVpnManager: NSObject {
     private var currentServerIp: String?
     private var bytesIn: Int64 = 0
     private var bytesOut: Int64 = 0
+    private var openvpnClient: OpenVPNClientPtr?
+    private var useOpenVPN = false
+    private var authorizationRef: AuthorizationRef?
     
     init(eventChannel: FlutterEventChannel) {
         super.init()
-        
+
         eventChannel.setStreamHandler(self)
         vpnManager = NEVPNManager.shared()
-        
-        // Observe VPN status changes
+
+        // Check if OpenVPN library is available
+        if openvpn_client_is_available() {
+            openvpnClient = openvpn_client_create()
+            useOpenVPN = (openvpnClient != nil)
+            print("✅ OpenVPN library available and initialized")
+        } else {
+            useOpenVPN = false
+            print("❌ OpenVPN library not available, falling back to IKEv2")
+        }
+
+        // Observe VPN status changes (for IKEv2 fallback)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(vpnStatusChanged),
@@ -25,8 +88,27 @@ class MacVpnManager: NSObject {
             object: nil
         )
     }
-    
+
+    deinit {
+        if let client = openvpnClient {
+            openvpn_client_destroy(client)
+        }
+
+        // Clean up authorization
+        if let authRef = authorizationRef {
+            AuthorizationFree(authRef, AuthorizationFlags())
+        }
+    }
+
     func initialize() {
+        // Request administrator privileges once during initialization
+        print("🔐 Requesting administrator privileges during app initialization...")
+        if requestAdministratorPrivileges() {
+            print("✅ Administrator privileges granted during initialization")
+        } else {
+            print("❌ Failed to obtain administrator privileges during initialization")
+        }
+
         vpnManager?.loadFromPreferences { [weak self] error in
             if let error = error {
                 print("Failed to load VPN preferences: \(error)")
@@ -36,21 +118,152 @@ class MacVpnManager: NSObject {
             }
         }
     }
+
+    private func requestAdministratorPrivileges() -> Bool {
+        // Check if we already have valid authorization
+        if let existingAuth = authorizationRef {
+            print("🔐 Checking existing administrator privileges...")
+
+            // Test if the existing authorization is still valid
+            let rightName = kAuthorizationRightExecute
+            let testResult = rightName.withCString { namePtr in
+                var authItem = AuthorizationItem(
+                    name: namePtr,
+                    valueLength: 0,
+                    value: nil,
+                    flags: 0
+                )
+
+                return withUnsafePointer(to: &authItem) { itemPtr in
+                    var authRights = AuthorizationRights(count: 1, items: UnsafeMutablePointer(mutating: itemPtr))
+
+                    // Test authorization without UI (no interaction)
+                    let authFlags: AuthorizationFlags = [.extendRights]
+                    let authStatus = AuthorizationCopyRights(existingAuth, &authRights, nil, authFlags, nil)
+
+                    return authStatus == errAuthorizationSuccess
+                }
+            }
+
+            if testResult {
+                print("✅ Existing administrator privileges are still valid")
+                return true
+            } else {
+                print("⚠️ Existing administrator privileges expired, requesting new ones...")
+                // Clean up expired authorization
+                AuthorizationFree(existingAuth, AuthorizationFlags())
+                authorizationRef = nil
+            }
+        }
+
+        print("🔐 Requesting new administrator privileges for TUN interface creation...")
+
+        var authRef: AuthorizationRef?
+        let status = AuthorizationCreate(nil, nil, AuthorizationFlags(), &authRef)
+
+        guard status == errAuthorizationSuccess else {
+            print("❌ Failed to create authorization reference: \(status)")
+            return false
+        }
+
+        // Define the right we need (system.privilege.admin)
+        let rightName = kAuthorizationRightExecute
+        return rightName.withCString { namePtr in
+            var authItem = AuthorizationItem(
+                name: namePtr,
+                valueLength: 0,
+                value: nil,
+                flags: 0
+            )
+
+            return withUnsafePointer(to: &authItem) { itemPtr in
+                var authRights = AuthorizationRights(count: 1, items: UnsafeMutablePointer(mutating: itemPtr))
+
+                // Request authorization with UI
+                let authFlags: AuthorizationFlags = [.interactionAllowed, .preAuthorize, .extendRights]
+                let authStatus = AuthorizationCopyRights(authRef!, &authRights, nil, authFlags, nil)
+
+                if authStatus == errAuthorizationSuccess {
+                    print("✅ Administrator privileges granted")
+                    self.authorizationRef = authRef
+                    return true
+                } else {
+                    print("❌ Administrator privileges denied: \(authStatus)")
+                    if let authRef = authRef {
+                        AuthorizationFree(authRef, AuthorizationFlags())
+                    }
+                    return false
+                }
+            }
+        }
+    }
     
     func connect(config: String, username: String?, password: String?, serverName: String?, completion: @escaping (Bool) -> Void) {
-        guard let vpnManager = vpnManager else {
+        print("🚀 macOS VPN: Starting connection to real OpenVPN server")
+        print("📄 Config name: \(serverName ?? "Unknown")")
+
+        if useOpenVPN, let client = openvpnClient {
+            print("✅ Using real OpenVPN library for connection")
+
+            // Check if we have administrator privileges (should have been obtained during initialization)
+            if authorizationRef == nil {
+                print("⚠️ No administrator privileges available, requesting...")
+                updateStatus(state: "connecting", message: "Requesting administrator privileges...")
+
+                guard requestAdministratorPrivileges() else {
+                    print("❌ Administrator privileges required for TUN interface creation")
+                    updateStatus(state: "error", message: "Administrator privileges required for VPN connection")
+                    completion(false)
+                    return
+                }
+            } else {
+                print("✅ Administrator privileges already available")
+            }
+
+            updateStatus(state: "connecting", message: "Initializing OpenVPN connection...")
+
+            // Parse server info for display
+            let serverInfo = parseServerInfo(from: config)
+            currentServerIp = serverInfo.server
+
+            // Use real OpenVPN library
+            let result = config.withCString { configPtr in
+                if let username = username, let password = password {
+                    return username.withCString { usernamePtr in
+                        return password.withCString { passwordPtr in
+                            return openvpn_client_connect(client, configPtr, usernamePtr, passwordPtr)
+                        }
+                    }
+                } else {
+                    return openvpn_client_connect(client, configPtr, nil, nil)
+                }
+            }
+
+            if result {
+                print("✅ OpenVPN connection initiated successfully")
+                isConnected = true
+                connectedAt = Date()
+                updateStatus(state: "connected", message: "OpenVPN connection established")
+                completion(true)
+            } else {
+                print("❌ OpenVPN connection failed")
+                updateStatus(state: "error", message: "OpenVPN connection failed")
+                completion(false)
+            }
+            return
+        }
+
+        // Fallback to IKEv2 (original code)
+        guard vpnManager != nil else {
             print("❌ VPN manager not available")
             completion(false)
             return
         }
 
-        print("🚀 macOS VPN: Starting connection to real OpenVPN server")
-        print("📄 Config name: \(serverName ?? "Unknown")")
-
         updateStatus(state: "connecting", message: "Requesting VPN permission...")
 
         // First, load existing preferences to check permissions
-        vpnManager.loadFromPreferences { [weak self] error in
+        vpnManager?.loadFromPreferences { [weak self] error in
             if let error = error {
                 print("❌ Failed to load VPN preferences: \(error)")
                 self?.updateStatus(state: "error", message: "Permission denied: \(error.localizedDescription)")
@@ -75,20 +288,42 @@ class MacVpnManager: NSObject {
         currentServerIp = serverInfo.server
 
         print("🌐 Parsed server: \(serverInfo.server):\(serverInfo.port)")
-        print("🔧 Using NetworkExtension IKEv2 (OpenVPN protocol not directly supported on macOS)")
-        print("⚠️  Note: This will attempt IKEv2 connection to OpenVPN server (may not work)")
+        print("❌ PROTOCOL MISMATCH: OpenVPN server detected, but macOS NetworkExtension only supports IKEv2/IPSec")
+        print("💡 SOLUTION: Use the system OpenVPN client instead:")
+        print("   sudo /usr/local/opt/openvpn/sbin/openvpn --config your_config.ovpn")
+        print("🔧 This app currently uses NetworkExtension IKEv2 (incompatible with OpenVPN servers)")
 
-        updateStatus(state: "connecting", message: "Configuring VPN for \(serverInfo.server)...")
+        updateStatus(state: "error", message: "❌ Protocol Mismatch: OpenVPN server requires OpenVPN client, not IKEv2. Use system OpenVPN client: 'sudo /usr/local/opt/openvpn/sbin/openvpn --config vm02.ovpn'")
+        completion(false)
+    }
 
-        // For macOS, we'll use IKEv2 as a fallback (OpenVPN requires custom network extension)
+    private func configureAndConnectIKEv2(config: String, username: String?, password: String?, serverName: String?, completion: @escaping (Bool) -> Void) {
+        guard let vpnManager = vpnManager else {
+            completion(false)
+            return
+        }
+
+        // Parse server info from OpenVPN config
+        let serverInfo = parseServerInfo(from: config)
+        currentServerIp = serverInfo.server
+
+        // The following IKEv2 code is kept for reference but won't work with OpenVPN servers
         let vpnProtocol = NEVPNProtocolIKEv2()
         vpnProtocol.serverAddress = serverInfo.server
         vpnProtocol.remoteIdentifier = serverInfo.server
         vpnProtocol.localIdentifier = username ?? "flutter_client"
 
-        // Use certificate-based authentication for OpenVPN compatibility
-        vpnProtocol.authenticationMethod = .certificate
-        vpnProtocol.useExtendedAuthentication = false
+        // Use shared secret authentication (most compatible for IKEv2)
+        vpnProtocol.authenticationMethod = .sharedSecret
+
+        // Set up extended authentication with username/password if provided
+        if let username = username, let password = password {
+            vpnProtocol.useExtendedAuthentication = true
+            vpnProtocol.username = username
+            vpnProtocol.passwordReference = storePassword(password: password)
+        } else {
+            vpnProtocol.useExtendedAuthentication = false
+        }
         vpnProtocol.disconnectOnSleep = false
 
         vpnManager.protocolConfiguration = vpnProtocol
@@ -155,11 +390,24 @@ class MacVpnManager: NSObject {
     }
     
     func disconnect(completion: @escaping (Bool) -> Void) {
+        if useOpenVPN, let client = openvpnClient {
+            print("🔌 Disconnecting OpenVPN...")
+            updateStatus(state: "disconnecting", message: "Disconnecting OpenVPN...")
+
+            openvpn_client_disconnect(client)
+            isConnected = false
+            connectedAt = nil
+            updateStatus(state: "disconnected", message: "OpenVPN disconnected")
+            completion(true)
+            return
+        }
+
+        // Fallback to IKEv2
         guard let vpnManager = vpnManager else {
             completion(false)
             return
         }
-        
+
         updateStatus(state: "disconnecting", message: "Disconnecting...")
         vpnManager.connection.stopVPNTunnel()
         completion(true)
@@ -167,15 +415,47 @@ class MacVpnManager: NSObject {
     
     func getConnectionStats() -> [String: Any]? {
         guard isConnected else { return nil }
-        
-        let duration = connectedAt?.timeIntervalSinceNow.magnitude ?? 0
-        
+
+        if useOpenVPN, let client = openvpnClient {
+            // Get real stats from OpenVPN client
+            let realStats = getRealOpenVPNStats(client: client)
+            return realStats
+        } else {
+            // Fallback to IKEv2 stats (legacy)
+            let duration = connectedAt?.timeIntervalSinceNow.magnitude ?? 0
+            return [
+                "bytesIn": bytesIn,
+                "bytesOut": bytesOut,
+                "duration": Int(duration),
+                "serverIp": currentServerIp ?? "",
+                "localIp": getLocalIPAddress() ?? ""
+            ]
+        }
+    }
+
+    private func getRealOpenVPNStats(client: OpenVPNClientPtr) -> [String: Any] {
+        let bytesIn = openvpn_client_get_bytes_in(client)
+        let bytesOut = openvpn_client_get_bytes_out(client)
+        let duration = openvpn_client_get_duration(client)
+
+        var serverIp = ""
+        if let serverIpPtr = openvpn_client_get_server_ip(client) {
+            serverIp = String(cString: serverIpPtr)
+        }
+
+        var localIp = ""
+        if let localIpPtr = openvpn_client_get_local_ip(client) {
+            localIp = String(cString: localIpPtr)
+        }
+
+        print("📊 Real connection stats: bytesIn=\(bytesIn), bytesOut=\(bytesOut), duration=\(duration), serverIp=\(serverIp), localIp=\(localIp)")
+
         return [
-            "bytesIn": bytesIn,
-            "bytesOut": bytesOut,
-            "duration": Int(duration),
-            "serverIp": currentServerIp ?? "",
-            "localIp": getLocalIPAddress() ?? ""
+            "bytesIn": Int64(bytesIn),
+            "bytesOut": Int64(bytesOut),
+            "duration": Int64(duration),
+            "serverIp": serverIp,
+            "localIp": localIp.isEmpty ? (getLocalIPAddress() ?? "") : localIp
         ]
     }
     

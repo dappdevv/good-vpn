@@ -1,15 +1,23 @@
 #include "openvpn_client.h"
 #include "openvpn3_wrapper.h"
-#include <android/log.h>
 #include <chrono>
 #include <thread>
 #include <sstream>
 #include <regex>
+#include <iostream>
 #include <fmt/format.h>
 
 #define LOG_TAG "OpenVPNClient"
+
+// Platform-specific logging
+#ifdef ANDROID
+#include <android/log.h>
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#else
+#define LOGI(...) do { printf("[INFO] " LOG_TAG ": " __VA_ARGS__); printf("\n"); } while(0)
+#define LOGE(...) do { printf("[ERROR] " LOG_TAG ": " __VA_ARGS__); printf("\n"); } while(0)
+#endif
 
 OpenVPNClient::OpenVPNClient(StatusCallback callback)
     : m_statusCallback(std::move(callback)) {
@@ -45,9 +53,24 @@ bool OpenVPNClient::connect(const std::string& config, const std::string& userna
     m_connecting = true;
     m_shouldStop = false;
 
-    if (m_useOpenVPN3 && m_openvpn3Client) {
+    if (m_useOpenVPN3) {
         LOGI("Using OpenVPN3 library for connection");
         updateStatus("connecting", "Initializing OpenVPN3 connection...");
+
+        // Ensure we have a fresh OpenVPN3 client instance for each connection
+        if (!m_openvpn3Client) {
+            LOGI("Creating new OpenVPN3 client instance");
+            try {
+                m_openvpn3Client = std::make_unique<OpenVPN3Wrapper>([this](const std::string& status, const std::string& message) {
+                    updateStatus(status, message);
+                });
+            } catch (const std::exception& e) {
+                LOGE("Failed to create OpenVPN3 client: %s", e.what());
+                m_connecting = false;
+                updateStatus("error", "Failed to initialize OpenVPN3 client");
+                return false;
+            }
+        }
 
         // Use real OpenVPN3 library
         bool success = m_openvpn3Client->connect(config, username, password);
@@ -96,6 +119,9 @@ void OpenVPNClient::disconnect() {
     if (m_useOpenVPN3 && m_openvpn3Client) {
         // Disconnect OpenVPN3 client
         m_openvpn3Client->disconnect();
+        // Clean up the client instance to ensure fresh state for next connection
+        m_openvpn3Client.reset();
+        LOGI("OpenVPN3 client instance cleaned up for next connection");
     }
 
     if (m_eventThread && m_eventThread->joinable()) {
