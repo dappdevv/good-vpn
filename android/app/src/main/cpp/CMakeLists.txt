@@ -47,7 +47,7 @@ find_library(android-lib android)
 add_library(
     openvpn_native
     SHARED
-    openvpn_jni.cpp
+    openvpn/openvpn_jni.cpp
     ${OPENVPN_ROOT_DIR}/openvpn_client.cpp
     ${OPENVPN_ROOT_DIR}/openvpn3_wrapper.cpp
 )

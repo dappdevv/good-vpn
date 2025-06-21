@@ -31,13 +31,12 @@ public:
     // Core functionality
     bool connect(const std::string& config, const std::string& username, const std::string& password);
     void disconnect();
-    std::string getStatus() const;
+    bool isConnected() const;
     ConnectionStats getStats() const;
     
     // Utility
     static bool isAvailable();
     
 private:
-    StatusCallback status_callback_;
-    std::unique_ptr<OpenVPN3ClientImpl> client_impl_;
+    std::unique_ptr<OpenVPN3ClientImpl> impl_;
 };
