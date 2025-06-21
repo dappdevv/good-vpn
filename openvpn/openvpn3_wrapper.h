@@ -33,6 +33,8 @@ public:
     void disconnect();
     bool isConnected() const;
     ConnectionStats getStats() const;
+    std::string getStatus() const;
+    std::string getLocalIP() const;
     
     // Utility
     static bool isAvailable();

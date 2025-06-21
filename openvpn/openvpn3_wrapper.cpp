@@ -279,7 +279,7 @@ public:
     }
 
     void acc_event(const openvpn::ClientAPI::AppCustomControlMessageEvent& ev) override {
-        LOGI("OpenVPN3 Custom Control Message: %s", ev.message.c_str());
+        LOGI("OpenVPN3 Custom Control Message received");
     }
 
     void log(const openvpn::ClientAPI::LogInfo& log_info) override {
@@ -372,7 +372,7 @@ public:
         if (connected_ || connecting_) {
             try {
                 // Get connection info from OpenVPN3 Core
-                auto conn_info = connection_info();
+                auto conn_info = const_cast<OpenVPN3ClientImpl*>(this)->connection_info();
                 
                 if (conn_info.defined) {
                     // Use OpenVPN3 Core connection info
@@ -385,11 +385,12 @@ public:
                     }
                     
                     stats.serverIp = conn_info.serverHost;
-                    stats.bytesIn = conn_info.bytesIn;
-                    stats.bytesOut = conn_info.bytesOut;
-                } else {
-                    LOGI("Stats: No connection info available");
                 }
+                
+                // Get transport stats for byte counts
+                auto transport_stats = const_cast<OpenVPN3ClientImpl*>(this)->transport_stats();
+                stats.bytesIn = transport_stats.bytesIn;
+                stats.bytesOut = transport_stats.bytesOut;
                 
                 // Calculate duration
                 if (connected_) {
@@ -451,6 +452,27 @@ bool OpenVPN3Wrapper::isConnected() const {
 
 ConnectionStats OpenVPN3Wrapper::getStats() const {
     return impl_ ? impl_->getStats() : ConnectionStats{};
+}
+
+std::string OpenVPN3Wrapper::getStatus() const {
+    if (!impl_) {
+        return "Disconnected";
+    }
+    
+    if (impl_->isConnected()) {
+        return "Connected";
+    } else {
+        return "Disconnected";
+    }
+}
+
+std::string OpenVPN3Wrapper::getLocalIP() const {
+    if (!impl_ || !impl_->isConnected()) {
+        return "";
+    }
+    
+    auto stats = impl_->getStats();
+    return stats.localIp;
 }
 
 bool OpenVPN3Wrapper::isAvailable() {
