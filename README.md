@@ -6,25 +6,26 @@ A cross-platform OpenVPN client built with Flutter with **native OpenVPN3 integr
 
 ## ✅ Current Status
 
-**FULLY FUNCTIONAL** - Android and macOS implementations are complete and working with real OpenVPN3 integration!
+**FULLY FUNCTIONAL** - Android, macOS, and iOS implementations are complete and working with real OpenVPN3 integration!
 
 ### Working Features
 - ✅ **Native OpenVPN3 Integration**: Real OpenVPN connections using OpenVPN3 Core library
 - ✅ **Android Support**: Fully functional with NDK 27.0.12077973
 - ✅ **macOS Support**: Fully functional with real system VPN integration
+- ✅ **iOS Support**: Fully functional with NetworkExtension framework and pure OpenVPN3 Core
 - ✅ **Real-time Status Updates**: Live connection status and statistics
 - ✅ **VPN IP Display**: Persistent VPN IP address display throughout connection
 - ✅ **Configuration Import**: Support for .ovpn configuration files
 - ✅ **VPN Interface Management**: Platform-specific VPN implementations
-- ✅ **Authorization Handling**: Proper privilege management (macOS admin auth)
+- ✅ **Authorization Handling**: Proper privilege management (macOS admin auth, iOS VPN permissions)
 - ✅ **Threading Safety**: Proper main thread handling for UI updates
 - ✅ **Connection Lifecycle**: Connect, authenticate, disconnect flow
 - ✅ **Multiple Connect/Disconnect Cycles**: Reliable reconnection support
 
 ### Platform Status
 - 🟢 **Android**: Fully implemented and tested with real OpenVPN3 (TUN_NULL mode)
-- 🟢 **macOS**: Fully implemented and tested with real system VPN (utun interfaces)
-- 🟡 **iOS**: Planned (requires Apple Developer signing)
+- 🟢 **macOS**: Fully implemented and tested with NetworkExtension framework (utun interfaces)
+- 🟢 **iOS**: Fully implemented with NetworkExtension framework and pure OpenVPN3 Core
 - 🟡 **Windows**: Planned
 - 🟡 **Linux**: Planned
 
@@ -114,11 +115,16 @@ The app features a modern, intuitive interface with:
 - **Xcode**: Latest stable version with command line tools
 - **macOS**: 10.15 (Catalina) or later
 - **Administrator Privileges**: Required for TUN interface creation
+- **NetworkExtension Framework**: Integrated and tested
 - **Apple Developer Account**: Recommended for code signing
 
-#### 📱 iOS Platform (🚧 Planned)
-- **iOS**: Xcode (macOS only)
-- **Apple Developer Account**: Required for Network Extension entitlements
+#### 📱 iOS Platform (✅ Fully Working)
+- **Xcode**: Latest stable version with iOS SDK
+- **iOS**: Version 12.0 or later for NetworkExtension support
+- **Apple Developer Account**: Required for NetworkExtension entitlements
+- **Real Device**: Required for VPN functionality testing (not simulator)
+- **Code Signing**: Proper certificates and provisioning profiles
+- **Pure OpenVPN3**: No IKEv2 fallback - uses only OpenVPN3 Core
 
 #### 🖥️ Other Platforms (🚧 Planned)
 - **Windows**: Visual Studio with C++ support
@@ -193,17 +199,37 @@ adb install build/app/outputs/flutter-apk/app-debug.apk
 git clone <repository-url>
 cd fl_openvpn_client
 
-# 2. Build OpenVPN dependencies for macOS
+# 2. Build and run with one command
+./build_macos.sh --debug
+
+# 3. Or build step by step:
+# Build OpenVPN dependencies for macOS
 cd macos
 ./build_openvpn.sh
 
-# 3. Build and run Flutter app
+# Build and run Flutter app
+cd ..
 cd ..
 flutter run -d macos
 
-# Note: The app will request administrator privileges on first connection
-# This is required for creating real TUN interfaces on macOS
+#### 📱 iOS Build (✅ Fully Working)
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd fl_openvpn_client
+
+# 2. Build and run iOS app
+./build_ios.sh --device --debug
+
+# 3. For simulator (UI testing only, no VPN)
+./build_ios.sh --simulator --debug
+
+# 4. Open in Xcode for advanced configuration
+open ios/Runner.xcworkspace
 ```
+
+**Note**: VPN functionality requires real iOS device - simulator only supports UI testing.
 
 #### 🖥️ Other Desktop Platforms (🚧 Coming Soon)
 

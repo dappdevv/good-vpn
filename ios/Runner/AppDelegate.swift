@@ -4,7 +4,7 @@ import NetworkExtension
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
-  private var vpnManager: VpnManager?
+  private var vpnManager: IosVpnManager?
 
   override func application(
     _ application: UIApplication,
@@ -21,17 +21,20 @@ import NetworkExtension
   }
 
   private func setupVpnChannel(controller: FlutterViewController) {
+    print("🚀 Setting up iOS VPN platform channels...")
     let channel = FlutterMethodChannel(name: "fl_openvpn_client", binaryMessenger: controller.binaryMessenger)
     let eventChannel = FlutterEventChannel(name: "fl_openvpn_client/status", binaryMessenger: controller.binaryMessenger)
 
-    vpnManager = VpnManager(eventChannel: eventChannel)
+    vpnManager = IosVpnManager()
+    eventChannel.setStreamHandler(vpnManager)
+    print("✅ iOS VPN platform channels setup complete")
 
     channel.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
       guard let self = self else { return }
 
       switch call.method {
       case "initialize":
-        self.vpnManager?.initialize()
+        print("🔧 iOS VPN: Initialize called")
         result(true)
       case "hasPermission":
         result(true) // iOS handles permissions differently
