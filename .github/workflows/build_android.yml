@@ -35,6 +35,7 @@ jobs:
           NDK_PATH="${ANDROID_SDK_ROOT}/ndk/27.0.12077973"
           echo "ANDROID_NDK_ROOT=${NDK_PATH}" >> $GITHUB_ENV
           echo "ANDROID_NDK=${NDK_PATH}" >> $GITHUB_ENV
+          echo "${NDK_PATH}/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
         shell: bash
 
       - name: Установка Flutter
