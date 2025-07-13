@@ -1,0 +1,70 @@
+name: Сборка Android APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Клонирование репозитория
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Установка JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Установка Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Установка NDK (версия 27.0.12077973)
+        run: |
+          echo "y" | sdkmanager --install "ndk;27.0.12077973"
+        shell: bash
+
+      - name: Экспорт пути к NDK
+        run: |
+          NDK_PATH="${ANDROID_SDK_ROOT}/ndk/27.0.12077973"
+          echo "ANDROID_NDK_ROOT=${NDK_PATH}" >> $GITHUB_ENV
+          echo "ANDROID_NDK=${NDK_PATH}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Установка Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+
+      - name: Проверка окружения
+        run: |
+          echo "Версия Flutter:"
+          flutter --version
+          echo "Версия Java:"
+          java -version
+          echo "ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}"
+          echo "ANDROID_NDK_ROOT: ${ANDROID_NDK_ROOT}"
+          echo "Содержимое NDK:"
+          ls -la ${ANDROID_NDK_ROOT}
+        shell: bash
+
+      - name: Установка зависимостей Flutter
+        run: flutter pub get
+
+      - name: Сборка Android приложения
+        run: |
+          chmod +x build_android.sh
+          ./build_android.sh --release
+        shell: bash
+
+      - name: Загрузка APK артефакта
+        uses: actions/upload-artifact@v4
+        with:
+          name: good-vpn-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
